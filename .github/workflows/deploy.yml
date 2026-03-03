@@ -35,8 +35,9 @@ jobs:
           docker build -t $REGISTRY/$IMAGE:${{ steps.color.outputs.COLOR }} .
           docker push $REGISTRY/$IMAGE:${{ steps.color.outputs.COLOR }}
 
-      - name: Deploy
-        run: |
-          kubectl apply -f k8s/${{ steps.color.outputs.COLOR }}-deployment.yaml
-          kubectl patch service app-service \
-            -p '{"spec":{"selector":{"app":"${{ steps.color.outputs.COLOR }}"}}}'
+      # Commented out to avoid deploying to the local cluster
+      # - name: Deploy 
+      #   run: |
+      #     kubectl apply -f k8s/${{ steps.color.outputs.COLOR }}-deployment.yaml
+      #     kubectl patch service app-service \
+      #       -p '{"spec":{"selector":{"app":"${{ steps.color.outputs.COLOR }}"}}}'
