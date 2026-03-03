@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+        - name: app
+          image: jeyran/bluegreen-app:blue
+          env:
+            - name: VERSION
+              value: "BLUE"
+          ports:
+            - containerPort: 3000

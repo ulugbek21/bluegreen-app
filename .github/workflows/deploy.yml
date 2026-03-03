@@ -1,0 +1,41 @@
+name: Blue-Green Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE: bluegreen-app
+  REGISTRY: docker.io/jeyran
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+      - name: Set Color
+        id: color
+        run: |
+          if [ "${{ github.run_number }}" -eq 1 ] || [ $((${{
+          github.run_number }} % 2)) -eq 0 ]; then
+            echo "COLOR=green" >> $GITHUB_OUTPUT
+          else
+            echo "COLOR=blue" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Image
+        run: |
+          docker build -t $REGISTRY/$IMAGE:${{ steps.color.outputs.COLOR }} .
+          docker push $REGISTRY/$IMAGE:${{ steps.color.outputs.COLOR }}
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s/${{ steps.color.outputs.COLOR }}-deployment.yaml
+          kubectl patch service app-service \
+            -p '{"spec":{"selector":{"app":"${{ steps.color.outputs.COLOR }}"}}}'
